@@ -36,7 +36,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd'T'HHmmss</maven.build.timestamp.format>
         <java.version>1.7</java.version>
-        <osiam.version>0.6</osiam.version>
+        <osiam.version>0.7-SNAPSHOT</osiam.version>
+        <derby.version>10.10.1.1</derby.version>
     </properties>
 
     <repositories>
@@ -64,12 +65,18 @@
         <dependency>
             <groupId>org.osiam</groupId>
             <artifactId>connector4java</artifactId>
-            <version>0.1</version>
+            <version>0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -83,20 +90,34 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.15</version>
                 <executions>
                     <execution>
-                        <id>integration-tests</id>
                         <goals>
                             <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.carlspring.maven</groupId>
+                <artifactId>derby-maven-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>start-derby</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
                         </goals>
                     </execution>
                     <execution>
-                        <id>verify</id>
+                        <id>stop-derby</id>
+                        <phase>post-integration-test</phase>
                         <goals>
-                            <goal>verify</goal>
+                            <goal>stop</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -105,20 +126,29 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
                 <version>9.0.2.v20130417</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derbyclient</artifactId>
+                        <version>${derby.version}</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <systemProperties>
-                        <systemProperty>
-                            <name>jetty.port</name>
-                            <value>9090</value>
-                        </systemProperty>
-                    </systemProperties>
+                    <requestLog implementation="org.eclipse.jetty.server.NCSARequestLog">
+                        <filename>target/yyyy_mm_dd.request.log</filename>
+                        <retainDays>90</retainDays>
+                        <append>true</append>
+                        <extended>false</extended>
+                        <logTimeZone>GMT</logTimeZone>
+                    </requestLog>
                     <scanIntervalSeconds>10</scanIntervalSeconds>
                     <stopPort>8005</stopPort>
                     <stopKey>STOP</stopKey>
                     <war>${project.build.directory}/osiam-server-${osiam.version}</war>
-                    <contextPath>/osiam-server/</contextPath>
                     <webAppConfig>
                         <extraClasspath>${project.basedir}/src/test/resources/</extraClasspath>
+                        <contextPath>/osiam-server</contextPath>
+                        <descriptor>${project.build.directory}/osiam-server-${osiam.version}/WEB-INF/</descriptor>
                     </webAppConfig>
                 </configuration>
                 <executions>
@@ -139,6 +169,38 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>dbunit-maven-plugin</artifactId>
+                <version>1.0-beta-3</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derbyclient</artifactId>
+                        <version>${derby.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <driver>org.apache.derby.jdbc.ClientDriver</driver>
+                    <url>jdbc:derby://localhost/osiamDB</url>
+                    <username>osiam</username>
+                    <password>osiam</password>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>operation</goal>
+                        </goals>
+                        <configuration>
+                            <url>jdbc:derby://localhost/osiamDB</url>
+                            <type>CLEAN_INSERT</type>
+                            <src>src/test/resources/database_seed.xml</src>
+                            <format>flat</format>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -198,5 +260,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

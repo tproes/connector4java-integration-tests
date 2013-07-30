@@ -1,5 +1,6 @@
 package de.osiam.client;
 
+import de.osiam.client.helper.OsiamITHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.osiam.client.OsiamUserService;
@@ -11,7 +12,6 @@ import org.osiam.client.oauth.GrantType;
 import org.osiam.resources.scim.User;
 
 import java.lang.reflect.Field;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -25,15 +25,17 @@ public class UserServiceIT {
 
     private AccessToken accessToken;
     private UUID uuidStandardUser;
-    private String endpointAddress = "http://localhost:9090";
+    private String endpointAddress = "http://localhost:8080/osiam-server/";
 
     private String clientId = "example-client";
     private String clientSecret = "secret";
     private AuthService authService;
     private OsiamUserService service;
 
+    private OsiamITHelper helper;
+
     @Before
-    public void setUp() throws URISyntaxException {
+    public void setUp() throws Exception {
 
         AuthService.Builder authBuilder = new AuthService.Builder(endpointAddress).
                 withClientId(clientId).
@@ -43,20 +45,20 @@ public class UserServiceIT {
                 withPassword("koala");
         authService = authBuilder.build();
         service = new OsiamUserService.Builder(endpointAddress).build();
+        accessToken = authService.retrieveAccessToken();
+        helper = new OsiamITHelper(service.getUri(), null, accessToken);
     }
 
     @Test
     public void get_a_valid_user() throws Exception {
-        given_a_test_user_UUID();
-        given_a_valid_access_token();
+        givenAnExistingUserWithUUID();
         User user = service.getUserByUUID(uuidStandardUser, accessToken);
         assertEquals(VALID_USER_UUID, user.getId());
     }
 
     @Test
     public void ensure_all_values_are_deserialized_correctly() throws Exception {
-        given_a_test_user_UUID();
-        given_a_valid_access_token();
+        givenAnExistingUserWithUUID();
         User actualUser = service.getUserByUUID(uuidStandardUser, accessToken);
 
         assertEquals("User", actualUser.getMeta().getResourceType());
@@ -102,13 +104,12 @@ public class UserServiceIT {
 
     @Test(expected = NoResultException.class)
     public void get_an_invalid_user_raises_exception() throws Exception {
-        given_a_valid_access_token();
         service.getUserByUUID(UUID.fromString("b01e0710-e9b9-4181-995f-4f1f59dc2999"), accessToken);
     }
 
     @Test(expected = UnauthorizedException.class)
     public void provide_an_invalid_access_token_raises_exception() throws Exception {
-        given_a_test_user_UUID();
+        givenAnExistingUserWithUUID();
         given_an_invalid_access_token();
 
         service.getUserByUUID(uuidStandardUser, accessToken);
@@ -123,14 +124,8 @@ public class UserServiceIT {
         tokenField.setAccessible(false);
     }
 
-    private void given_a_valid_access_token() throws Exception {
-        if (accessToken == null) {
-
-            accessToken = authService.retrieveAccessToken();
-        }
-    }
-
-    private void given_a_test_user_UUID() {
+    private void givenAnExistingUserWithUUID() throws Exception {
+        helper.createUser(VALID_USER_UUID);
         uuidStandardUser = UUID.fromString(VALID_USER_UUID);
     }
 }
