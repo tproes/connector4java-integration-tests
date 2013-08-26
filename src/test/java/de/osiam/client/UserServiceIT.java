@@ -58,7 +58,7 @@ public class UserServiceIT extends AbstractIntegrationTestBase {
         assertNull(name.getMiddleName());
     }
 
-    @Test
+	@Test
     public void emails_are_deserialized_correctly() throws Exception {
         givenAValidUserUUID();
         whenUserIsDeserialized();
@@ -103,4 +103,5 @@ public class UserServiceIT extends AbstractIntegrationTestBase {
     private void givenAValidUserUUID() throws Exception {
         validUUID = UUID.fromString(VALID_USER_UUID);
     }
+    
 }

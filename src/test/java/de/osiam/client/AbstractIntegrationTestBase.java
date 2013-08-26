@@ -13,6 +13,7 @@ import static org.springframework.test.util.AssertionErrors.fail;
 
 public abstract class AbstractIntegrationTestBase {
     static final protected String VALID_USER_UUID = "834b410a-943b-4c80-817a-4465aed037bc";
+    static final protected String DELETE_USER_UUID = "aba67300-74f1-4e51-a68a-0a6c5c45b79c";
     static final protected String INVALID_UUID = "ffffffff-ffff-ffff-ffff-fffffffffff";
     static final protected String INVALID_STRING = "invalid";
     protected String endpointAddress = "http://localhost:8080/osiam-server";
@@ -25,22 +26,22 @@ public abstract class AbstractIntegrationTestBase {
     public void abstractSetUp() throws Exception {
 
         AuthService.Builder authBuilder = new AuthService.Builder(endpointAddress).
-                withClientId(clientId).
-                withClientSecret(clientSecret).
-                withGrantType(GrantType.PASSWORD).
-                withUsername("marissa").
-                withPassword("koala");
+                clientId(clientId).
+                clientSecret(clientSecret).
+                grantType(GrantType.PASSWORD).
+                username("marissa").
+                password("koala");
         authService = authBuilder.build();
         accessToken = authService.retrieveAccessToken();
     }
     
     protected void givenAnAccessTokenForOneSecond() throws Exception {
         AuthService.Builder authBuilder = new AuthService.Builder(endpointAddress).
-                withClientId("example-client-2").
-                withClientSecret("secret1").
-                withGrantType(GrantType.PASSWORD).
-                withUsername("hsimpson").
-                withPassword("koala");
+                clientId("example-client-2").
+                clientSecret("secret1").
+                grantType(GrantType.PASSWORD).
+                username("hsimpson").
+                password("koala");
         authService = authBuilder.build();
         accessToken = authService.retrieveAccessToken();
     }

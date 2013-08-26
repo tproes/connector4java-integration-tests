@@ -61,7 +61,7 @@ public class MeUserServiceIT extends AbstractIntegrationTestBase {
     @Test
     public void emails_are_deserialized_correctly_for_user_bjensen() throws Exception {
         givenAnAccessTokenForBJensen();
-        
+
         whenUserIsDeserialized();
 
         List<MultiValuedAttribute> emails = deserializedUser.getEmails();
@@ -122,8 +122,8 @@ public class MeUserServiceIT extends AbstractIntegrationTestBase {
     
     @Test(expected = UnauthorizedException.class)
     public void access_token_is_expired() throws Exception {
-    	givenAnAccessTokenForOneSecond();
-    	Thread.sleep(1000);
+        givenAnAccessTokenForOneSecond();
+        Thread.sleep(1000);
         whenUserIsDeserialized();
         fail();
     }
@@ -145,22 +145,22 @@ public class MeUserServiceIT extends AbstractIntegrationTestBase {
     
     private void givenAnAccessTokenForBJensen() throws Exception {
         AuthService.Builder authBuilder = new AuthService.Builder(endpointAddress).
-                withClientId(clientId).
-                withClientSecret(clientSecret).
-                withGrantType(GrantType.PASSWORD).
-                withUsername("bjensen").
-                withPassword("koala");
+                clientId(clientId).
+                clientSecret(clientSecret).
+                grantType(GrantType.PASSWORD).
+                username("bjensen").
+                password("koala");
         authService = authBuilder.build();
         accessToken = authService.retrieveAccessToken();
     }
 
     private void givenAnAccessTokenForHSimpson() throws Exception {
         AuthService.Builder authBuilder = new AuthService.Builder(endpointAddress).
-                withClientId(clientId).
-                withClientSecret(clientSecret).
-                withGrantType(GrantType.PASSWORD).
-                withUsername("hsimpson").
-                withPassword("koala");
+                clientId(clientId).
+                clientSecret(clientSecret).
+                grantType(GrantType.PASSWORD).
+                username("hsimpson").
+                password("koala");
         authService = authBuilder.build();
         accessToken = authService.retrieveAccessToken();
     }
